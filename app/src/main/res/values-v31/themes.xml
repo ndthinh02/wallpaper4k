@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.Wallpaper" parent="Theme.Walper.Main">
+        <item name="android:windowSplashScreenBackground">@color/splash_color</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/walper_mark</item>
+        <item name="android:windowBackground">@color/splash_color</item>
+    </style>
+</resources>

@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.Wallpaper" parent="Theme.Walper.Main">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+    </style>
+</resources>

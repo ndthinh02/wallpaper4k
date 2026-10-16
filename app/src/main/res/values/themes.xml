@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Wallpaper" parent="Theme.Walper.Main">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+    </style>
+    <style name="Theme.Walper.Main" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">@font/roboto</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+</resources>

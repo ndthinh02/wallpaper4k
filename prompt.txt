@@ -1,0 +1,387 @@
+Bạn là Android developer và UI/UX designer có kinh nghiệm.
+
+Hãy triển khai trực tiếp ứng dụng wallpaper Android Kotlin + Jetpack Compose tên Walper trong project hiện tại, dựa trên bộ ảnh tham chiếu trong design/walper/.
+
+Mục tiêu:
+- Giao diện bám sát bộ thiết kế Walper.
+- Tích hợp Wallhaven và hoàn thiện các chức năng hình nền thật.
+- Làm một bản có thể sử dụng được, không chỉ dựng giao diện mẫu.
+- Không dựng backend trong giai đoạn này.
+
+A. ĐỌC PROJECT VÀ THIẾT KẾ
+
+1. Đọc cấu trúc project, AGENTS.md nếu có và cấu hình Gradle.
+2. Giữ applicationId/package hiện có; đổi tên hiển thị thành Walper.
+3. Giữ các phiên bản Kotlin/AGP/Gradle/SDK tương thích hiện có.
+4. Mở ảnh tham chiếu trước khi code. Với ảnh ghép, phóng to hoặc tách từng vùng để đọc từng màn.
+5. Các file Header và Group chỉ có thể là tiêu đề/phân nhóm của bộ thiết kế; không tự coi chúng là màn app.
+6. Không coi các trạng thái có bàn phím, menu hoặc popup là những màn độc lập khi chúng thuộc cùng một luồng.
+7. Không dùng ảnh nguyên màn hình làm giao diện.
+
+B. PHẠM VI
+
+Triển khai thật:
+- Splash, onboarding.
+- Home, Collections, Search, Settings.
+- Sidebar menu.
+- Chi tiết ảnh, tải ảnh, đặt hình nền.
+- Favorites, Downloads.
+- Theme và ngôn ngữ Việt/Anh.
+- Tự đổi hình nền từ ảnh đã tải.
+- Trung tâm thông báo hoạt động trên máy.
+- Thông tin quyền riêng tư và xuất báo cáo lỗi.
+
+Để giai đoạn sau:
+- Đăng ký, đăng nhập, OTP, khôi phục mật khẩu.
+- Google/Facebook login.
+- Hồ sơ tài khoản và xóa tài khoản.
+- Premium, thanh toán và ảnh độc quyền.
+
+Không tạo đăng nhập giả, OTP giả, Premium giả hoặc nút thành công khi chưa có dịch vụ thật.
+Trong bản hiện tại dùng chế độ khách, không bắt đăng nhập để sử dụng.
+Không tự thêm backend chỉ để lấp các màn tài khoản.
+
+C. BẢN ĐỒ THAM CHIẾU
+
+- Splash: image 1–7 và image 28.
+- Onboarding sáng: image 8–10.
+- Onboarding tối: image 12–14.
+- Welcome/Auth, dành giai đoạn sau: image 11, 15–30.
+- Lỗi mạng/không tìm thấy: image 31.
+- Home và kiểu lưới: image 32–33.
+- Collections và chi tiết collection: image 34.
+- Search: image 35–38.
+- Wallpaper detail: image 39–40.
+- Apply wallpaper: image 41–42.
+- Favorites: image 43–44.
+- Downloads: image 45–48.
+- Sidebar/Privacy: image 49–50.
+- Report issue: image 51–52.
+- Notifications: image 54–55.
+- Settings/Profile: image 57–58.
+
+D. THIẾT KẾ CHUNG
+
+1. Bám sát bố cục của mẫu:
+   - Header với menu trái, logo giữa, chuông phải ở các màn phù hợp.
+   - Bottom bar nổi, bo góc lớn.
+   - Bottom navigation: Home / Collections / Search / Settings.
+   - Favorites và Downloads truy cập từ sidebar.
+   - Light theme: nền trắng, chữ tối, bottom bar tối.
+   - Dark theme: nền xanh đen, chữ sáng, bottom bar tím.
+   - Accent tím lavender và các gradient xuất hiện đúng vị trí trong mẫu.
+2. Không thêm hero/banner lớn vào Home vì mẫu Home ưu tiên lưới ảnh.
+3. Tạo design tokens tập trung cho màu, typography, spacing, radius.
+4. Các thông số chưa có trong ảnh cần ước lượng nhất quán, không thay đổi ngẫu nhiên giữa các màn.
+5. Dùng dp/sp; không lấy pixel ảnh export làm dp.
+6. Dùng icon thư viện gần mẫu nhất.
+7. Nếu có asset riêng thì dùng asset đó. Hiện bộ PNG chưa cung cấp logo/font/illustration tách riêng:
+   - Có thể trích riêng một vùng asset sạch từ ảnh tham chiếu nếu chất lượng đủ.
+   - Không cắt dính chữ, controls hoặc nền khác theme.
+   - Không dùng toàn bộ screenshot thay UI.
+   - Báo rõ asset nào chỉ được thay thế gần đúng.
+8. Không vẽ status bar, bàn phím hoặc home indicator iOS.
+9. Dùng system UI Android, xử lý edge-to-edge, safe insets, IME.
+10. Content không bị bottom bar nổi che khi cuộn đến cuối.
+11. Animation nhẹ cho chuyển màn, mở menu, yêu thích, thay đổi layout.
+12. Không khẳng định giao diện pixel-perfect nếu chưa đối chiếu screenshot app.
+
+E. KIẾN TRÚC VÀ DỮ LIỆU
+
+Dùng cấu trúc gọn:
+- data: API DTO, Room entities, DataStore.
+- repository: wallpaper, favorites, downloads, settings.
+- presentation: ViewModels, UI states, screens, components.
+
+Công nghệ:
+- Retrofit + OkHttp.
+- Coroutines + StateFlow.
+- Coil.
+- Room.
+- DataStore.
+- Navigation Compose.
+- WorkManager cho tác vụ định kỳ.
+
+Không tạo nhiều module hoặc abstraction thừa.
+
+Dữ liệu local:
+- Favorites: wallpaper ID, thumbnail, original URL, trang nguồn, kích thước, thời điểm lưu.
+- Downloads: wallpaper ID, content URI, trạng thái, thời điểm tải, metadata cần thiết.
+- Search history: từ khóa và thời điểm.
+- Activity notifications: loại sự kiện, nội dung, ảnh, thời điểm, trạng thái đọc.
+- Settings: theme, language, grid mode, tùy chọn tự đổi hình nền, thông báo.
+
+F. WALLHAVEN API
+
+1. Đọc tài liệu chính thức:
+   https://wallhaven.cc/help/api
+
+2. Base URL:
+   https://wallhaven.cc/api/v1/
+
+3. Endpoints:
+   GET /search
+   GET /w/{id}
+
+4. Chỉ lấy SFW:
+   purity=100
+   categories=111
+
+5. Không cần API key cho truy vấn cơ bản; không scrape website.
+6. Home:
+   - Trending: sorting=toplist, topRange phù hợp.
+   - Recent: sorting=date_added, order=desc.
+   - Random: sorting=random.
+7. Thiết kế có Exclusive và biểu tượng vương miện, nhưng hiện không có dữ liệu Premium:
+   - Không gắn vương miện lên ảnh ngẫu nhiên.
+   - Bản hiện tại dùng lựa chọn Ngẫu nhiên thay Exclusive.
+8. Dùng thumbnail cho lưới, ảnh lớn cho detail, path cho ảnh gốc.
+9. Phân trang theo metadata thật; chống trùng ID, chống gọi load-more đồng thời.
+10. Giữ seed cho các trang Random nếu API hỗ trợ.
+11. Tìm kiếm debounce khoảng 400 ms và hủy truy vấn cũ.
+12. Không trộn dữ liệu khi thay từ khóa, bộ lọc hoặc sorting.
+13. Xử lý timeout, HTTP 429, lỗi server và dữ liệu thiếu.
+14. Không retry vô hạn hoặc tự thay nguồn ảnh.
+15. Link trang Wallhaven và nguồn gốc được hiển thị trong thông tin ảnh khi có.
+16. Người upload không mặc nhiên là tác giả.
+17. Không bịa endpoint, lượt tải, số lượng ảnh, tác giả hoặc độ phân giải 4K.
+
+G. LUỒNG MỞ APP
+
+- Splash theo một biến thể sáng/tối phù hợp, không chạy lần lượt mọi biến thể.
+- Không thêm thời gian chờ giả để kéo dài splash.
+- Lần đầu: Splash → Onboarding 3 trang → Home.
+- Các lần sau: Splash → Home.
+- Onboarding có swipe, indicator và nút tiếp tục/bắt đầu.
+- Lưu trạng thái hoàn tất bằng DataStore.
+- Nội dung onboarding phản ánh chức năng thật của bản hiện tại.
+
+H. HOME
+
+Tham chiếu image 32–33.
+
+- Header menu/logo/notifications.
+- Dropdown sorting.
+- Toggle hai kiểu lưới:
+  1. Lưới so le.
+  2. Lưới đều.
+- Ảnh bo góc, nút yêu thích ở vị trí theo mẫu.
+- Chạm ảnh mở detail.
+- Chạm tim không đồng thời mở detail.
+- Refresh và load-more.
+- Loading ban đầu bằng placeholder; loading cuối danh sách nhẹ.
+- Lỗi load-more không xóa danh sách đã tải.
+- Thay kiểu lưới không gọi lại API.
+- Giữ scroll/state khi đổi tab hoặc quay về từ detail.
+- Placeholder màu trong mẫu chỉ dùng lúc loading, không giữ làm nội dung chính.
+
+I. COLLECTIONS
+
+Tham chiếu image 34.
+
+- Danh sách card ngang lớn có ảnh bìa và tên collection.
+- Các danh mục đầu: Abstract, Architecture, Colorful, Nature.
+- Bổ sung Cars, Anime, Gaming, Space, Animals, City, Technology, Minimal, Flowers, Ocean, Mountains, AMOLED.
+- Danh mục local ánh xạ sang từ khóa/tag tìm kiếm Wallhaven.
+- Không coi đây là endpoint collection do Wallhaven cung cấp.
+- Ảnh bìa lấy từ dữ liệu thật và cache; không gọi hàng loạt API ngay khi khởi động.
+- Chạm card mở danh sách ảnh với back, tên collection và nút filter.
+- Số lượng hiển thị chỉ lấy từ kết quả API thật; nếu chưa có thì bỏ số.
+- Có lọc sorting, màu và tỷ lệ/độ phân giải theo API thực tế.
+- Các bộ lọc có Apply và Reset.
+- Hiển thị lại điều kiện đang áp dụng.
+
+J. SEARCH
+
+Tham chiếu image 35–38.
+
+- Ô tìm kiếm, clear, lịch sử có thể xóa.
+- Trạng thái trước tìm kiếm, loading, kết quả, không có kết quả, lỗi.
+- Có tìm ảnh và tìm collection local phù hợp.
+- Collection local tìm theo tên tiếng Việt/Anh.
+- Không tự dịch mọi truy vấn người dùng bằng một dịch vụ chưa cấu hình.
+- IME search hoạt động, đóng bàn phím phù hợp.
+- Kết quả có phân trang và mở detail.
+- Empty state dùng phong cách illustration trong mẫu.
+- Không dùng empty state thay cho lỗi mạng.
+
+K. WALLPAPER DETAIL
+
+Tham chiếu image 39–40.
+
+- Ảnh chiếm toàn màn hình.
+- Back phía trên, info và các controls theo mẫu.
+- Thumbnail hiển thị trước khi ảnh lớn tải xong.
+- Zoom/pan, ẩn/hiện controls.
+- Nút favorite, download, overflow và Apply.
+- Info hiển thị metadata thật: resolution, file type, size, tags, trang nguồn.
+- Share chia sẻ URL trang ảnh.
+- Có xem trước màn hình khóa; đồng hồ/ngày chỉ là preview minh họa.
+- Khi mở từ Downloads, ưu tiên content URI local để dùng offline.
+
+L. DOWNLOAD
+
+- Tải thật bằng luồng ngoài main thread.
+- Chỉ báo thành công sau khi file đã lưu hoàn tất.
+- Có tiến trình, chống tải trùng và thông báo lỗi.
+- Lưu vào Pictures/Walper bằng MediaStore trên Android phù hợp.
+- Xử lý quyền theo minSdk thực tế, không xin quyền thư viện ảnh toàn bộ nếu chỉ lưu ảnh do app tạo.
+- Dọn file chưa hoàn tất khi tải lỗi.
+- Không hiển thị các lựa chọn HD/4K nếu API không cung cấp biến thể tương ứng.
+
+M. APPLY WALLPAPER
+
+Tham chiếu image 41–42.
+
+- Bottom sheet:
+  - Màn hình khóa.
+  - Màn hình chính.
+  - Cả hai.
+- Kiểm tra WallpaperManager và khả năng thiết bị.
+- Cho điều chỉnh crop theo tỷ lệ màn hình trước khi đặt.
+- Decode ảnh có giới hạn bộ nhớ.
+- Apply ngoài main thread.
+- Xử lý khác biệt Android/OEM và dùng luồng hệ thống nếu cần.
+- Không đặt hình nền trước khi người dùng chọn.
+- Chỉ mở trạng thái thành công sau khi thao tác được xác nhận.
+- Nếu dùng luồng hệ thống không xác nhận được kết quả cuối, không khẳng định thành công.
+- Success state theo mẫu, có nút về Home.
+
+N. FAVORITES
+
+Tham chiếu image 43–44.
+
+- Lưới ảnh đã thích.
+- Room persistence và cập nhật ngay giữa mọi màn.
+- Bỏ thích hoạt động thật.
+- Filter/sorting local đơn giản theo mới thêm/cũ nhất.
+- Empty state và CTA khám phá.
+- Không yêu cầu đăng nhập.
+- Favorite chỉ lưu metadata/cache, không hứa ảnh gốc offline nếu chưa tải.
+
+O. DOWNLOADS
+
+Tham chiếu image 45–48.
+
+- Danh sách file app đã tải, thumbnail local.
+- Mở detail, share file qua URI hợp lệ, đặt hình nền.
+- Xóa mục lịch sử và xóa file là hai thao tác phân biệt rõ.
+- Nếu người dùng chọn xóa file khỏi máy, có xác nhận và xử lý yêu cầu hệ thống khi cần.
+- File bị xóa ngoài app có trạng thái rõ, không crash.
+- Empty state theo mẫu.
+- Không đọc toàn bộ thư viện ảnh để tìm Downloads.
+
+P. SIDEBAR
+
+Tham chiếu image 49–50.
+
+- Giữ phong cách menu và hiệu ứng nội dung chính thu nhỏ/dịch chuyển nếu khả thi.
+- Không render hai bản màn Home gây nhân đôi state, gọi API hoặc tốn bộ nhớ.
+- Header hiển thị chế độ khách, không dùng tên/avatar mẫu như tài khoản thật.
+- Home, Favorites, Downloads, Privacy, Report issue.
+- Không hiển thị Login/Logout như chức năng đang hoạt động trong bản chưa có auth.
+- Đóng bằng nút X, back hoặc chạm vùng nội dung phù hợp.
+
+Q. SETTINGS
+
+Tham chiếu image 57–58.
+
+- Giữ bố cục list, icon, subtitle, switch như mẫu.
+- Theme: Light / Dark / System.
+- Language: Việt / English; mọi chuỗi đặt trong resources.
+- Auto Change Wallpaper.
+- Enable Notifications.
+- Xóa cache ảnh.
+- Thông tin nguồn và phiên bản thực tế.
+
+Không hiển thị Update Profile, Delete Account hoặc Premium như tính năng hoạt động khi chưa có backend.
+
+Rate app/Share app:
+- Chỉ mở link store nếu đã cấu hình link thật.
+- Không dùng link app khác hoặc link giả.
+- Có thể ẩn mục chưa có đích hợp lệ.
+- Share wallpaper vẫn hoạt động độc lập.
+
+R. AUTO CHANGE WALLPAPER
+
+Đây là chức năng bổ sung thật theo switch trong mẫu.
+
+- Nguồn ảnh: các ảnh đã tải trong app.
+- Người dùng chọn đích và khoảng thời gian: ví dụ 1 giờ, 6 giờ, 24 giờ.
+- Chỉ bật khi có ảnh local hợp lệ.
+- Dùng WorkManager unique periodic work.
+- Không hứa chạy đúng phút vì lịch nền phụ thuộc hệ thống.
+- Tắt switch phải hủy job.
+- Chọn ngẫu nhiên, tránh lặp ảnh ngay trước nếu có nhiều ảnh.
+- Không tải hàng loạt ảnh từ Wallhaven trong nền.
+- File thiếu hoặc không có quyền áp dụng phải được xử lý.
+- Không tạo vòng lặp nhanh hoặc dùng exact alarm cho chức năng này.
+
+S. NOTIFICATIONS
+
+Tham chiếu image 54–55.
+
+- Trung tâm hoạt động local, có tiêu đề, thời gian, thumbnail.
+- Sự kiện thật: tải hoàn tất, đặt hình nền thành công, đổi hình nền tự động.
+- Không tạo thông báo “new wallpapers/category added” giả.
+- Chạm mở ảnh tương ứng khi còn dữ liệu.
+- Vuốt xóa mục, có empty state.
+- Lưu bằng Room.
+- Notification hệ thống chỉ xuất hiện khi bật và được cấp quyền theo Android.
+- Từ chối quyền không làm mất khả năng xem lịch sử trong app.
+- Không bổ sung push backend.
+
+T. PRIVACY VÀ REPORT ISSUE
+
+- Privacy mô tả đúng bản hiện tại: dữ liệu lưu local, request gửi đến Wallhaven, quyền tải/đặt ảnh.
+- Không copy tên miền, pháp nhân hoặc nội dung Privacy mẫu như sự thật của ứng dụng.
+- Report issue dùng form theo mẫu để soạn báo cáo.
+- Chưa có server/contact thật: cho xem và chia sẻ báo cáo qua Android Sharesheet.
+- Chỉ thu thông tin người dùng chủ động nhập và thông tin kỹ thuật cơ bản.
+- Không log API secrets hoặc dữ liệu riêng tư.
+- Không thông báo “đã gửi cho hỗ trợ” khi chỉ mở Sharesheet.
+
+U. TRẠNG THÁI VÀ ĐỘ ỔN ĐỊNH
+
+- Tách UI state loading/content/empty/error.
+- Back navigation đúng từ mọi màn.
+- Favorite/download không mất khi mở lại app.
+- Theme, language, grid mode được lưu.
+- Tránh OutOfMemory với ảnh gốc lớn.
+- Không gọi mạng hoặc decode ảnh trên main thread.
+- Không mất state bất hợp lý khi xoay màn hình.
+- Không dùng vùng chạm quá nhỏ chỉ để giống icon trong ảnh.
+- Mọi nút hiện ra phải có hành vi thật.
+
+V. TRÌNH TỰ THỰC HIỆN
+
+1. Đọc mẫu, thiết lập theme và components dùng chung.
+2. Navigation, header, sidebar, bottom bar.
+3. API + Home + Collections + Search.
+4. Detail + Favorites.
+5. Download + Downloads + Apply.
+6. Splash + onboarding + Settings.
+7. Auto change + Notifications + Privacy + Report.
+8. Đối chiếu giao diện, build và sửa lỗi.
+
+Thực hiện liên tục trong phạm vi trên, không dừng sau mỗi bước để hỏi xác nhận.
+Không tự cắt chức năng đã yêu cầu để chỉ bàn giao một UI demo.
+
+W. KIỂM TRA VÀ BÀN GIAO
+
+- Không tạo bộ test lớn hoặc tài liệu dài.
+- Chạy build debug sau triển khai, sửa lỗi do thay đổi gây ra.
+- Nếu có emulator/device, kiểm tra nhanh:
+  Home → Search → Detail → Favorite → Download → Apply.
+  Mở lại app để kiểm tra persistence.
+  Đổi Light/Dark, mở sidebar và Downloads.
+- Chụp và đối chiếu ít nhất Home, Collections, Detail và Settings nếu môi trường cho phép.
+- Nếu thiếu asset, mạng, SDK hoặc thiết bị, báo chính xác phần chưa kiểm tra.
+- Không báo build thành công khi chưa chạy build.
+- Cuối cùng báo ngắn:
+  chức năng hoàn thành,
+  kết quả build,
+  khác biệt thiết kế còn lại,
+  chức năng giai đoạn sau,
+  đường dẫn APK nếu có.
+  Sau khi làm xong xuất ra file readme để trình baos tiến trình
